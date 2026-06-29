@@ -1,3 +1,5 @@
 #!/usr/bin/env node
 
-console.log("Hello from commitgen!");
+import { run } from '../src/index.js';
+
+run();
