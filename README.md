@@ -68,3 +68,5 @@ commitgen --model llama3.2
 - **Inquirer.js (Classic)** - Interactive prompts
 - **Chalk** - Premium terminal styling
 - **Native Node Fetch & Child_Process** - Zero bloat system integration
+
+this is just a test line to see if the project is working 

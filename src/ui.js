@@ -19,7 +19,7 @@ export function displayMessage(message) {
 export async function promptUserAction() {
     const { action } = await inquirer.prompt([
         {
-            type: 'list',
+            type: 'select',
             name: 'action',
             message: chalk.white.bold('What would you like to do?'),
             choices: [
