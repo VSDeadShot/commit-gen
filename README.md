@@ -56,10 +56,20 @@ Whenever you have changes ready to commit:
 
 ### Command Options
 
-Specify a different Ollama model (defaults to `mistral`):
-```bash
-commitgen --model llama3.2
-```
+- **Change Model**: Specify a different Ollama model (defaults to `mistral`).
+  ```bash
+  commitgen --model llama3.2
+  ```
+
+- **Dry Run**: Generate and preview the message without actually running `git commit`.
+  ```bash
+  commitgen --dry-run
+  ```
+
+- **Gemini Fallback**: Use the Gemini API instead of local Ollama (requires the `GEMINI_API_KEY` environment variable).
+  ```bash
+  commitgen --gemini
+  ```
 
 ## 🏗 Tech Stack
 
@@ -68,5 +78,3 @@ commitgen --model llama3.2
 - **Inquirer.js (Classic)** - Interactive prompts
 - **Chalk** - Premium terminal styling
 - **Native Node Fetch & Child_Process** - Zero bloat system integration
-
-just a line to test again 
