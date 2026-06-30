@@ -12,6 +12,7 @@ program
     .description('CLI to generate Conventional Commits using local LLMs')
     .version('1.0.0')
     .option('-m, --model <name>', 'Ollama model to use', 'mistral')
+    .option('--dry-run', "show generated message but don't commit")
     .action(async (options) => {
         try {
             // 1. Verify we are in a git repository
@@ -37,6 +38,11 @@ program
                 const message = await generateCommitMessage(prompt, options.model);
                 
                 displayMessage(message);
+                
+                if (options.dryRun) {
+                    console.log(chalk.gray('Dry run complete. No changes were committed.\n'));
+                    process.exit(0);
+                }
                 
                 const action = await promptUserAction();
                 
