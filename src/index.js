@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import { isGitRepo, getStagedDiff, commitChanges } from './git.js';
 import { buildPrompt } from './prompt.js';
 import { generateCommitMessage } from './ollama.js';
+import { generateCommitMessageGemini } from './gemini.js';
 import { displayMessage, promptUserAction, promptManualEdit } from './ui.js';
 
 const program = new Command();
@@ -13,6 +14,7 @@ program
     .version('1.0.0')
     .option('-m, --model <name>', 'Ollama model to use', 'mistral')
     .option('--dry-run', "show generated message but don't commit")
+    .option('--gemini', "use Gemini API instead of local Ollama")
     .action(async (options) => {
         try {
             // 1. Verify we are in a git repository
@@ -35,7 +37,18 @@ program
                 console.log(chalk.gray('\nAnalyzing staged diff and generating message...'));
                 
                 const prompt = buildPrompt(diff);
-                const message = await generateCommitMessage(prompt, options.model);
+                
+                let message;
+                if (options.gemini) {
+                    if (!process.env.GEMINI_API_KEY) {
+                        console.log(chalk.red.bold('\n❌ Error: ') + 'GEMINI_API_KEY environment variable is missing.');
+                        console.log(chalk.gray('Set it using: $env:GEMINI_API_KEY="your_key" (PowerShell) or export GEMINI_API_KEY="your_key" (Mac/Linux)\n'));
+                        process.exit(1);
+                    }
+                    message = await generateCommitMessageGemini(prompt);
+                } else {
+                    message = await generateCommitMessage(prompt, options.model);
+                }
                 
                 displayMessage(message);
                 
