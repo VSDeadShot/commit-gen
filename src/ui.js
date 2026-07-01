@@ -51,3 +51,20 @@ export async function promptManualEdit(currentMessage) {
     ]);
     return editedMessage;
 }
+
+/**
+ * Prompts the user to configure their default settings.
+ * @param {string} currentModel The current default model
+ * @returns {Promise<{model: string}>} The new config answers
+ */
+export async function promptConfigMenu(currentModel) {
+    return await inquirer.prompt([
+        {
+            type: 'input',
+            name: 'model',
+            message: chalk.white.bold('Enter your preferred default Ollama model:'),
+            default: currentModel,
+            prefix: chalk.magenta('❯')
+        }
+    ]);
+}

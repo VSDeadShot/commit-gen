@@ -4,19 +4,40 @@ import { isGitRepo, getStagedDiff, commitChanges } from './git.js';
 import { buildPrompt } from './prompt.js';
 import { generateCommitMessage } from './ollama.js';
 import { generateCommitMessageGemini } from './gemini.js';
-import { displayMessage, promptUserAction, promptManualEdit } from './ui.js';
+import { displayMessage, promptUserAction, promptManualEdit, promptConfigMenu } from './ui.js';
+import { getConfig, setConfig } from './config.js';
 
 const program = new Command();
 
 program
     .name('commitgen')
     .description('CLI to generate Conventional Commits using local LLMs')
-    .version('1.0.0')
-    .option('-m, --model <name>', 'Ollama model to use', 'mistral')
+    .version('1.0.0');
+
+program.command('config')
+    .description('Configure default settings')
+    .action(async () => {
+        try {
+            const config = await getConfig();
+            console.log(chalk.magenta.bold('\n⚙️  Commitgen Configuration\n'));
+            const answers = await promptConfigMenu(config.model);
+            await setConfig(answers);
+            console.log(chalk.green.bold('\n✅ Configuration saved successfully to ~/.commitgen/config.json!\n'));
+        } catch (error) {
+            console.log('\n' + chalk.red.bold('❌ Error: ') + error.message);
+            process.exit(1);
+        }
+    });
+
+program
+    .option('-m, --model <name>', 'Ollama model to use')
     .option('--dry-run', "show generated message but don't commit")
     .option('--gemini', "use Gemini API instead of local Ollama")
     .action(async (options) => {
         try {
+            const config = await getConfig();
+            const selectedModel = options.model || config.model;
+
             // 1. Verify we are in a git repository
             const isRepo = await isGitRepo();
             if (!isRepo) {
@@ -47,7 +68,7 @@ program
                     }
                     message = await generateCommitMessageGemini(prompt);
                 } else {
-                    message = await generateCommitMessage(prompt, options.model);
+                    message = await generateCommitMessage(prompt, selectedModel);
                 }
                 
                 displayMessage(message);
