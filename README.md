@@ -25,13 +25,7 @@ A lightning-fast, offline-first CLI tool that reads your staged git diffs and au
 To install this tool globally on your machine so you can use it in any repository:
 
 ```bash
-# Clone the repository
-git clone https://github.com/VSDeadShot/commit-gen.git
-cd commit-gen
-
-# Install dependencies and link globally
-npm install
-npm link
+npm install -g @vedanshsharma/commit-gen
 ```
 
 ## 🚀 Usage
@@ -69,6 +63,11 @@ Whenever you have changes ready to commit:
 - **Gemini Fallback**: Use the Gemini API instead of local Ollama (requires the `GEMINI_API_KEY` environment variable).
   ```bash
   commitgen --gemini
+  ```
+
+- **Configure Defaults**: Interactively set your default model so you don't have to pass the `--model` flag every time. This saves your preference to `~/.commitgen/config.json`.
+  ```bash
+  commitgen config
   ```
 
 ## 🏗 Tech Stack
