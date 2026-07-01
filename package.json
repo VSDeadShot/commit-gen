@@ -1,11 +1,11 @@
 {
-  "name": "commit-message-generator",
+  "name": "commit-gen",
   "version": "1.0.0",
-  "description": "",
+  "description": "CLI to generate Conventional Commits using local LLMs or Gemini",
   "bin": {
     "commitgen": "./bin/commitgen.js"
   },
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -13,10 +13,22 @@
     "type": "git",
     "url": "git+https://github.com/VSDeadShot/commit-gen.git"
   },
-  "keywords": [],
+  "keywords": [
+    "git",
+    "commit",
+    "cli",
+    "ai",
+    "ollama",
+    "conventional-commits"
+  ],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "type": "module",
+  "files": [
+    "bin",
+    "src",
+    "README.md"
+  ],
   "bugs": {
     "url": "https://github.com/VSDeadShot/commit-gen/issues"
   },
