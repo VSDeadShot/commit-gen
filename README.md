@@ -70,6 +70,11 @@ Whenever you have changes ready to commit:
   commitgen config
   ```
 
+- **Git Hook Integration**: Automatically run the AI whenever you type `git commit` in your terminal! Run this command inside any git repository to install the `prepare-commit-msg` hook:
+  ```bash
+  commitgen install-hook
+  ```
+
 ## 🏗 Tech Stack
 
 - **JavaScript / Node.js ES Modules**
