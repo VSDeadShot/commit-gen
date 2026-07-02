@@ -6,6 +6,8 @@ import { generateCommitMessage } from './ollama.js';
 import { generateCommitMessageGemini } from './gemini.js';
 import { promptUserAction, promptManualEdit, promptConfigMenu } from './ui.js';
 import { getConfig, setConfig } from './config.js';
+import { installHook } from './hook.js';
+import fs from 'fs';
 
 const program = new Command();
 
@@ -29,10 +31,22 @@ program.command('config')
         }
     });
 
+program.command('install-hook')
+    .description('Install git hook to auto-run on git commit')
+    .action(async () => {
+        try {
+            await installHook();
+        } catch (error) {
+            console.log('\n' + chalk.red.bold('❌ Error: ') + error.message);
+            process.exit(1);
+        }
+    });
+
 program
     .option('-m, --model <name>', 'Ollama model to use')
     .option('--dry-run', "show generated message but don't commit")
     .option('--gemini', "use Gemini API instead of local Ollama")
+    .option('--hook <file>', "internal use only: pass the commit message file")
     .action(async (options) => {
         try {
             const config = await getConfig();
@@ -92,8 +106,13 @@ program
                 const action = await promptUserAction();
                 
                 if (action === 'accept') {
-                    await commitChanges(message);
-                    console.log(chalk.green.bold('\n✅ Successfully committed!'));
+                    if (options.hook) {
+                        fs.writeFileSync(options.hook, message);
+                        console.log(chalk.green.bold('\n✅ Saved AI message to git!'));
+                    } else {
+                        await commitChanges(message);
+                        console.log(chalk.green.bold('\n✅ Successfully committed!'));
+                    }
                     break;
                 } else if (action === 'regenerate') {
                     // Just continue the loop to regenerate
@@ -101,14 +120,21 @@ program
                 } else if (action === 'edit') {
                     const edited = await promptManualEdit(message);
                     if (edited && edited.trim() !== '') {
-                        await commitChanges(edited.trim());
-                        console.log(chalk.green.bold('\n✅ Successfully committed with your edits!'));
+                        if (options.hook) {
+                            fs.writeFileSync(options.hook, edited.trim());
+                            console.log(chalk.green.bold('\n✅ Saved your edited message to git!'));
+                        } else {
+                            await commitChanges(edited.trim());
+                            console.log(chalk.green.bold('\n✅ Successfully committed with your edits!'));
+                        }
                     } else {
                         console.log(chalk.red('\n❌ Commit aborted: Message cannot be empty.'));
+                        if (options.hook) process.exit(1);
                     }
                     break;
                 } else if (action === 'cancel') {
                     console.log(chalk.gray('\nProcess cancelled. No changes committed.'));
+                    if (options.hook) process.exit(1);
                     break;
                 }
             }
