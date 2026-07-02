@@ -9,6 +9,7 @@ A lightning-fast, offline-first CLI tool that reads your staged git diffs and au
 - **100% Offline & Private:** Uses local LLMs. Your source code never leaves your machine.
 - **Zero API Costs:** No OpenAI/Anthropic API keys needed.
 - **Professional History:** Strictly adheres to the [Conventional Commits](https://www.conventionalcommits.org/) specification.
+- **Smart Issue Linking:** Automatically appends `Closes #ISSUE` to your commits based on your current branch name.
 - **Lightning Fast:** Generates and commits in seconds without disrupting your terminal flow.
 
 ## 🛠 Prerequisites
