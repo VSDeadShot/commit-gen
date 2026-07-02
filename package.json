@@ -1,6 +1,6 @@
 {
   "name": "@vedanshsharma/commit-gen",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "CLI to generate Conventional Commits using local LLMs or Gemini",
   "bin": {
     "commitgen": "bin/commitgen.js"
