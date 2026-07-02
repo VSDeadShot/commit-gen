@@ -22,7 +22,24 @@ export async function isGitRepo() {
  */
 export async function getStagedDiff() {
     try {
-        const { stdout } = await execFilePromise('git', ['diff', '--staged']);
+        const args = [
+            'diff',
+            '--staged',
+            '--',
+            '.',
+            ':(exclude)package-lock.json',
+            ':(exclude)yarn.lock',
+            ':(exclude)pnpm-lock.yaml',
+            ':(exclude)*.svg',
+            ':(exclude)*.png',
+            ':(exclude)*.jpg',
+            ':(exclude)*.jpeg',
+            ':(exclude)*.webp',
+            ':(exclude)*.gif',
+            ':(exclude)*.min.js',
+            ':(exclude)*.min.css'
+        ];
+        const { stdout } = await execFilePromise('git', args);
         return stdout.trim();
     } catch (error) {
         throw new Error('Failed to get staged diff: ' + error.message);
