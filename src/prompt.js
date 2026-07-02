@@ -27,10 +27,16 @@ export function truncateDiff(diff, maxLength = 3500) {
 /**
  * Builds the final prompt to be sent to the LLM.
  * @param {string} rawDiff The raw git diff from the staged files
+ * @param {string} branchName The current git branch name
  * @returns {string} The complete prompt
  */
-export function buildPrompt(rawDiff) {
+export function buildPrompt(rawDiff, branchName = '') {
     const diff = truncateDiff(rawDiff);
     
-    return `${SYSTEM_PROMPT}\n\nHere is the git diff:\n\`\`\`diff\n${diff}\n\`\`\`\n\nGenerate the commit message now:`;
+    let branchContext = '';
+    if (branchName) {
+        branchContext = `\n\nThe current git branch is "${branchName}". If this branch name contains an issue tracker ID (e.g., JIRA-123, ABC-456, or #123), you MUST append a footer to the commit message exactly like this: 'Closes <ISSUE-ID>'.`;
+    }
+    
+    return `${SYSTEM_PROMPT}${branchContext}\n\nHere is the git diff:\n\`\`\`diff\n${diff}\n\`\`\`\n\nGenerate the commit message now:`;
 }

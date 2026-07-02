@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
-import { isGitRepo, getStagedDiff, commitChanges } from './git.js';
+import { isGitRepo, getStagedDiff, commitChanges, getCurrentBranch } from './git.js';
 import { buildPrompt } from './prompt.js';
 import { generateCommitMessage } from './ollama.js';
 import { generateCommitMessageGemini } from './gemini.js';
@@ -67,11 +67,14 @@ program
                 process.exit(0);
             }
 
+            // 2.5. Get current branch name
+            const branchName = await getCurrentBranch();
+
             // 3. Main interactive loop
             while (true) {
                 console.log(chalk.gray('\nAnalyzing staged diff and generating message...'));
                 
-                const prompt = buildPrompt(diff);
+                const prompt = buildPrompt(diff, branchName);
                 
                 console.log('\n' + chalk.magenta.bold('✨ Generated Commit Message ✨'));
                 console.log(chalk.gray('─────────────────────────────────────────────'));

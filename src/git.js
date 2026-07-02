@@ -59,3 +59,16 @@ export async function commitChanges(message) {
         throw new Error('Failed to commit changes: ' + error.message);
     }
 }
+
+/**
+ * Gets the current git branch name.
+ * @returns {Promise<string>} The branch name, or empty string if it fails
+ */
+export async function getCurrentBranch() {
+    try {
+        const { stdout } = await execFilePromise('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
+        return stdout.trim();
+    } catch (error) {
+        return '';
+    }
+}
