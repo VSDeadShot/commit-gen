@@ -43,16 +43,23 @@ export async function promptManualEdit(currentMessage) {
 
 /**
  * Prompts the user to configure their default settings.
- * @param {string} currentModel The current default model
- * @returns {Promise<{model: string}>} The new config answers
+ * @param {Object} config The current configuration
+ * @returns {Promise<{model: string, useGitmoji: boolean}>} The new config answers
  */
-export async function promptConfigMenu(currentModel) {
+export async function promptConfigMenu(config) {
     return await inquirer.prompt([
         {
             type: 'input',
             name: 'model',
             message: chalk.white.bold('Enter your preferred default Ollama model:'),
-            default: currentModel,
+            default: config.model || 'mistral',
+            prefix: chalk.magenta('❯')
+        },
+        {
+            type: 'confirm',
+            name: 'useGitmoji',
+            message: chalk.white.bold('Enable Gitmoji (e.g. ✨ feat)?'),
+            default: config.useGitmoji !== undefined ? config.useGitmoji : false,
             prefix: chalk.magenta('❯')
         }
     ]);

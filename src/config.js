@@ -6,7 +6,8 @@ const CONFIG_DIR = path.join(os.homedir(), '.commitgen');
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
 
 const DEFAULT_CONFIG = {
-    model: 'mistral'
+    model: 'mistral',
+    useGitmoji: false
 };
 
 /**

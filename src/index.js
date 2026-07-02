@@ -22,7 +22,7 @@ program.command('config')
         try {
             const config = await getConfig();
             console.log(chalk.magenta.bold('\n⚙️  Commitgen Configuration\n'));
-            const answers = await promptConfigMenu(config.model);
+            const answers = await promptConfigMenu(config);
             await setConfig(answers);
             console.log(chalk.green.bold('\n✅ Configuration saved successfully to ~/.commitgen/config.json!\n'));
         } catch (error) {
@@ -74,7 +74,7 @@ program
             while (true) {
                 console.log(chalk.gray('\nAnalyzing staged diff and generating message...'));
                 
-                const prompt = buildPrompt(diff, branchName);
+                const prompt = buildPrompt(diff, branchName, config.useGitmoji);
                 
                 console.log('\n' + chalk.magenta.bold('✨ Generated Commit Message ✨'));
                 console.log(chalk.gray('─────────────────────────────────────────────'));

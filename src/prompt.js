@@ -28,15 +28,20 @@ export function truncateDiff(diff, maxLength = 3500) {
  * Builds the final prompt to be sent to the LLM.
  * @param {string} rawDiff The raw git diff from the staged files
  * @param {string} branchName The current git branch name
+ * @param {boolean} useGitmoji Whether to prepend a gitmoji
  * @returns {string} The complete prompt
  */
-export function buildPrompt(rawDiff, branchName = '') {
+export function buildPrompt(rawDiff, branchName = '', useGitmoji = false) {
     const diff = truncateDiff(rawDiff);
     
-    let branchContext = '';
+    let instructions = '';
     if (branchName) {
-        branchContext = `\n\nThe current git branch is "${branchName}". If this branch name contains an issue tracker ID (e.g., JIRA-123, ABC-456, or #123), you MUST append a footer to the commit message exactly like this: 'Closes <ISSUE-ID>'.`;
+        instructions += `\n\nThe current git branch is "${branchName}". If this branch name contains an issue tracker ID (e.g., JIRA-123, ABC-456, or #123), you MUST append a footer to the commit message exactly like this: 'Closes <ISSUE-ID>'.`;
+    }
+
+    if (useGitmoji) {
+        instructions += `\n\nYou MUST prepend the appropriate Gitmoji to the commit type. Examples:\n✨ feat\n🐛 fix\n♻️ refactor\n📝 docs\n💄 style\n✅ test\n🔧 chore\nExample output: '✨ feat(ui): add login'`;
     }
     
-    return `${SYSTEM_PROMPT}${branchContext}\n\nHere is the git diff:\n\`\`\`diff\n${diff}\n\`\`\`\n\nGenerate the commit message now:`;
+    return `${SYSTEM_PROMPT}${instructions}\n\nHere is the git diff:\n\`\`\`diff\n${diff}\n\`\`\`\n\nGenerate the commit message now:`;
 }
