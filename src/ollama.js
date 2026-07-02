@@ -1,10 +1,10 @@
 /**
- * Sends the prompt to the local Ollama instance and returns the generated commit message.
+ * Sends the prompt to the local Ollama instance and streams the generated commit message.
  * @param {string} prompt The full prompt containing the diff and instructions
  * @param {string} model The Ollama model to use (default: 'mistral')
- * @returns {Promise<string>} The generated commit message
+ * @returns {AsyncGenerator<string, void, unknown>} Yields tokens of the commit message
  */
-export async function generateCommitMessage(prompt, model = 'mistral') {
+export async function* generateCommitMessage(prompt, model = 'mistral') {
     try {
         const response = await fetch('http://localhost:11434/api/generate', {
             method: 'POST',
@@ -14,7 +14,7 @@ export async function generateCommitMessage(prompt, model = 'mistral') {
             body: JSON.stringify({
                 model: model,
                 prompt: prompt,
-                stream: false, // We want the full response at once
+                stream: true, // Enable streaming
             }),
         });
 
@@ -22,8 +22,30 @@ export async function generateCommitMessage(prompt, model = 'mistral') {
             throw new Error(`Ollama API returned status ${response.status}: ${response.statusText}`);
         }
 
-        const data = await response.json();
-        return data.response.trim();
+        const decoder = new TextDecoder('utf-8');
+        let buffer = '';
+
+        for await (const chunk of response.body) {
+            buffer += decoder.decode(chunk, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop(); // keep the incomplete line in the buffer
+            
+            for (const line of lines) {
+                if (line.trim()) {
+                    const data = JSON.parse(line);
+                    if (data.response) {
+                        yield data.response;
+                    }
+                }
+            }
+        }
+        
+        if (buffer.trim()) {
+            const data = JSON.parse(buffer);
+            if (data.response) {
+                yield data.response;
+            }
+        }
     } catch (error) {
         // Handle connection refused specifically to give a friendly error
         if (error.code === 'ECONNREFUSED' || (error.cause && error.cause.code === 'ECONNREFUSED')) {

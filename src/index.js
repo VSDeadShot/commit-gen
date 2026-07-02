@@ -4,7 +4,7 @@ import { isGitRepo, getStagedDiff, commitChanges } from './git.js';
 import { buildPrompt } from './prompt.js';
 import { generateCommitMessage } from './ollama.js';
 import { generateCommitMessageGemini } from './gemini.js';
-import { displayMessage, promptUserAction, promptManualEdit, promptConfigMenu } from './ui.js';
+import { promptUserAction, promptManualEdit, promptConfigMenu } from './ui.js';
 import { getConfig, setConfig } from './config.js';
 
 const program = new Command();
@@ -59,19 +59,30 @@ program
                 
                 const prompt = buildPrompt(diff);
                 
-                let message;
-                if (options.gemini) {
-                    if (!process.env.GEMINI_API_KEY) {
-                        console.log(chalk.red.bold('\n❌ Error: ') + 'GEMINI_API_KEY environment variable is missing.');
-                        console.log(chalk.gray('Set it using: $env:GEMINI_API_KEY="your_key" (PowerShell) or export GEMINI_API_KEY="your_key" (Mac/Linux)\n'));
-                        process.exit(1);
-                    }
-                    message = await generateCommitMessageGemini(prompt);
-                } else {
-                    message = await generateCommitMessage(prompt, selectedModel);
+                console.log('\n' + chalk.magenta.bold('✨ Generated Commit Message ✨'));
+                console.log(chalk.gray('─────────────────────────────────────────────'));
+                
+                let message = '';
+                
+                if (options.gemini && !process.env.GEMINI_API_KEY) {
+                    console.log(chalk.red.bold('\n❌ Error: ') + 'GEMINI_API_KEY environment variable is missing.');
+                    console.log(chalk.gray('Set it using: $env:GEMINI_API_KEY="your_key" (PowerShell) or export GEMINI_API_KEY="your_key" (Mac/Linux)\n'));
+                    process.exit(1);
                 }
                 
-                displayMessage(message);
+                const generator = options.gemini 
+                    ? generateCommitMessageGemini(prompt) 
+                    : generateCommitMessage(prompt, selectedModel);
+                
+                for await (const chunk of generator) {
+                    process.stdout.write(chalk.cyanBright.bold(chunk));
+                    message += chunk;
+                }
+                
+                // Print a newline at the end of the stream just in case
+                console.log('\n' + chalk.gray('─────────────────────────────────────────────\n'));
+                
+                message = message.trim();
                 
                 if (options.dryRun) {
                     console.log(chalk.gray('Dry run complete. No changes were committed.\n'));

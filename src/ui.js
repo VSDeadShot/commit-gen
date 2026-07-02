@@ -2,17 +2,6 @@ import inquirer from 'inquirer';
 import chalk from 'chalk';
 
 /**
- * Displays the generated commit message with a premium, clean aesthetic.
- * @param {string} message The commit message to display
- */
-export function displayMessage(message) {
-    console.log('\n' + chalk.magenta.bold('✨ Generated Commit Message ✨'));
-    console.log(chalk.gray('─────────────────────────────────────────────'));
-    console.log(chalk.cyanBright.bold(message));
-    console.log(chalk.gray('─────────────────────────────────────────────\n'));
-}
-
-/**
  * Prompts the user for their next action using a styled list.
  * @returns {Promise<string>} The selected action ('accept', 'regenerate', 'edit', 'cancel')
  */
