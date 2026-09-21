@@ -1,13 +1,13 @@
 # 🚀 Commit Message Generator (commitgen)
 
-A lightning-fast, offline-first CLI tool that reads your staged git diffs and automatically generates professional Conventional Commits using locally running LLMs (via Ollama).
+npm package: `@vedanshsharma/commit-gen` · command: `commitgen`
 
-*(Replace this text with a Demo GIF once recorded)*
+A lightning-fast, offline-first CLI tool that reads your staged git diffs and automatically generates professional Conventional Commits using locally running LLMs (via Ollama).
 
 ## ✨ Why this tool?
 
-- **100% Offline & Private:** Uses local LLMs. Your source code never leaves your machine.
-- **Zero API Costs:** No OpenAI/Anthropic API keys needed.
+- **Private by default:** with Ollama, your code stays on your machine. If you opt into `--gemini`, the staged diff is sent to Google's Gemini API.
+- **No API keys for the default mode:** Ollama needs none. `--gemini` needs a `GEMINI_API_KEY`.
 - **Professional History:** Strictly adheres to the [Conventional Commits](https://www.conventionalcommits.org/) specification.
 - **Gitmoji Support:** Optional built-in support for prepending emojis (✨, 🐛, ♻️) to your commits.
 - **Smart Issue Linking:** Automatically appends `Closes #ISSUE` to your commits based on your current branch name.
@@ -76,6 +76,8 @@ Whenever you have changes ready to commit:
   ```bash
   commitgen install-hook
   ```
+
+  Note: `install-hook` overwrites any existing `prepare-commit-msg` hook in that repo. On Windows, the hook relies on the shell bundled with Git for Windows. After you accept a message, git still opens your editor for a final review.
 
 ## 🏗 Tech Stack
 
