@@ -4,6 +4,12 @@ npm package: `@vedanshsharma/commit-gen` · command: `commitgen`
 
 A lightning-fast, offline-first CLI tool that reads your staged git diffs and automatically generates professional Conventional Commits using locally running LLMs (via Ollama).
 
+
+
+https://github.com/user-attachments/assets/3cc2f081-4c27-4510-89a2-fa60fe0c9ed7
+
+
+
 ## ✨ Why this tool?
 
 - **Private by default:** with Ollama, your code stays on your machine. If you opt into `--gemini`, the staged diff is sent to Google's Gemini API.
