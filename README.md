@@ -21,12 +21,14 @@ https://github.com/user-attachments/assets/3cc2f081-4c27-4510-89a2-fa60fe0c9ed7
 
 ## 🛠 Prerequisites
 
-1. **Node.js** (v18+ recommended for native `fetch`).
-2. **Ollama** - You must have [Ollama](https://ollama.com/) installed and running locally.
-3. **LLM Model** - Download your preferred model (default is `mistral`):
-   ```bash
-   ollama pull mistral
-   ```
+1. **Node.js v22.12 or newer**, which the bundled `commander` dependency requires.
+2. **Git**, since commitgen reads your staged diff with `git diff --staged`.
+3. **An LLM backend.** You need one of these:
+   - **Ollama (default, runs locally):** install [Ollama](https://ollama.com/), keep it running, and pull a model (the default is `mistral`):
+     ```bash
+     ollama pull mistral
+     ```
+   - **Gemini (cloud, opt-in with `--gemini`):** set the `GEMINI_API_KEY` environment variable. Ollama isn't needed for this mode.
 
 ## 📦 Installation
 
