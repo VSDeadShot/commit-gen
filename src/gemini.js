@@ -1,4 +1,24 @@
 /**
+ * Yields the generated text carried by a single server-sent event line.
+ * @param {string} line One line of the Gemini SSE response
+ * @returns {Generator<string, void, unknown>} Yields the token, or nothing if the line carries none
+ */
+function* parseSseLine(line) {
+    if (!line.startsWith('data: ')) return;
+
+    const dataStr = line.replace('data: ', '').trim();
+    if (!dataStr || dataStr === '[DONE]') return;
+
+    const data = JSON.parse(dataStr);
+    if (data.candidates && data.candidates.length > 0) {
+        const parts = data.candidates[0].content.parts;
+        if (parts && parts.length > 0 && parts[0].text) {
+            yield parts[0].text;
+        }
+    }
+}
+
+/**
  * Sends the prompt to the Gemini API and streams the generated commit message.
  * @param {string} prompt The full prompt containing the diff and instructions
  * @returns {AsyncGenerator<string, void, unknown>} Yields tokens of the commit message
@@ -36,20 +56,12 @@ export async function* generateCommitMessageGemini(prompt) {
             buffer = lines.pop(); // keep the incomplete line in the buffer
 
             for (const line of lines) {
-                if (line.startsWith('data: ')) {
-                    const dataStr = line.replace('data: ', '').trim();
-                    if (dataStr && dataStr !== '[DONE]') {
-                        const data = JSON.parse(dataStr);
-                        if (data.candidates && data.candidates.length > 0) {
-                            const parts = data.candidates[0].content.parts;
-                            if (parts && parts.length > 0 && parts[0].text) {
-                                yield parts[0].text;
-                            }
-                        }
-                    }
-                }
+                yield* parseSseLine(line);
             }
         }
+
+        // The last event has no trailing newline when the stream ends abruptly
+        yield* parseSseLine(buffer);
     } catch (error) {
         throw new Error('Failed to generate commit message via Gemini: ' + error.message);
     }
