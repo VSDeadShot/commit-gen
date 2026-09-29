@@ -4,7 +4,7 @@ import { isGitRepo, getStagedDiff, commitChanges, getCurrentBranch } from './git
 import { buildPrompt } from './prompt.js';
 import { generateCommitMessage } from './ollama.js';
 import { generateCommitMessageGemini } from './gemini.js';
-import { promptUserAction, promptManualEdit, promptConfigMenu } from './ui.js';
+import { createMessageBlock, promptUserAction, promptManualEdit, promptConfigMenu } from './ui.js';
 import { getConfig, setConfig } from './config.js';
 import { installHook } from './hook.js';
 import fs from 'fs';
@@ -76,9 +76,6 @@ program
                 
                 const prompt = buildPrompt(diff, branchName, config.useGitmoji);
                 
-                console.log('\n' + chalk.magenta.bold('✨ Generated Commit Message ✨'));
-                console.log(chalk.gray('─────────────────────────────────────────────'));
-                
                 let message = '';
                 
                 if (options.gemini && !process.env.GEMINI_API_KEY) {
@@ -91,13 +88,12 @@ program
                     ? generateCommitMessageGemini(prompt) 
                     : generateCommitMessage(prompt, selectedModel);
                 
+                const block = createMessageBlock();
                 for await (const chunk of generator) {
-                    process.stdout.write(chalk.cyanBright.bold(chunk));
+                    block.write(chunk);
                     message += chunk;
                 }
-                
-                // Print a newline at the end of the stream just in case
-                console.log('\n' + chalk.gray('─────────────────────────────────────────────\n'));
+                block.end();
                 
                 message = message.trim();
                 

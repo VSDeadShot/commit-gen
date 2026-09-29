@@ -1,6 +1,33 @@
 import inquirer from 'inquirer';
 import chalk from 'chalk';
 
+const DIVIDER = chalk.gray('─────────────────────────────────────────────');
+
+/**
+ * Creates the framed block that the streamed commit message is printed into.
+ * @param {{write: Function}} out The stream to print to (default: stdout)
+ * @returns {{write: Function, end: Function}} A block that prints tokens as they arrive
+ */
+export function createMessageBlock(out = process.stdout) {
+    let started = false;
+
+    return {
+        write(chunk) {
+            if (!started) {
+                // Held back until a token arrives, so a failed request prints no header
+                out.write('\n' + chalk.magenta.bold('✨ Generated Commit Message ✨') + '\n' + DIVIDER + '\n');
+                started = true;
+            }
+            out.write(chalk.cyanBright.bold(chunk));
+        },
+        end() {
+            if (started) {
+                out.write('\n' + DIVIDER + '\n\n');
+            }
+        }
+    };
+}
+
 /**
  * Prompts the user for their next action using a styled list.
  * @returns {Promise<string>} The selected action ('accept', 'regenerate', 'edit', 'cancel')
