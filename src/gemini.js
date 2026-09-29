@@ -19,45 +19,60 @@ function* parseSseLine(line) {
 }
 
 /**
- * Requests the streaming completion once.
+ * Requests the streaming completion once, giving up if no response arrives in time.
  * @param {string} prompt The full prompt containing the diff and instructions
  * @param {string} apiKey The Gemini API key
+ * @param {number} timeoutMs How long to wait for the response headers
  * @returns {Promise<Response>} The API response, successful or not
  */
-function requestCompletion(prompt, apiKey) {
-    return fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:streamGenerateContent?alt=sse&key=${apiKey}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            contents: [{
-                parts: [{ text: prompt }]
-            }]
-        }),
-    });
+async function requestCompletion(prompt, apiKey, timeoutMs) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(new Error('timeout')), timeoutMs);
+
+    try {
+        return await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:streamGenerateContent?alt=sse&key=${apiKey}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{ text: prompt }]
+                }]
+            }),
+            signal: controller.signal,
+        });
+    } catch (error) {
+        if (controller.signal.aborted) {
+            throw new Error(`Gemini timed out after ${Math.round(timeoutMs / 1000)}s without responding.`);
+        }
+        throw error;
+    } finally {
+        // Stops the clock once the headers are in: streaming time is not counted
+        clearTimeout(timer);
+    }
 }
 
 /**
  * Sends the prompt to the Gemini API and streams the generated commit message.
  * @param {string} prompt The full prompt containing the diff and instructions
- * @param {{retryDelayMs?: number, onNotice?: Function}} options Retry delay and a notice callback
+ * @param {{retryDelayMs?: number, timeoutMs?: number, onNotice?: Function}} options Retry delay, response timeout and a notice callback
  * @returns {AsyncGenerator<string, void, unknown>} Yields tokens of the commit message
  */
-export async function* generateCommitMessageGemini(prompt, { retryDelayMs = 2000, onNotice } = {}) {
+export async function* generateCommitMessageGemini(prompt, { retryDelayMs = 2000, timeoutMs = 30000, onNotice } = {}) {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
         throw new Error('GEMINI_API_KEY environment variable is not set.');
     }
 
     try {
-        let response = await requestCompletion(prompt, apiKey);
+        let response = await requestCompletion(prompt, apiKey, timeoutMs);
 
         // 503 means Gemini is momentarily overloaded, so one retry is usually enough
         if (response.status === 503) {
             if (onNotice) onNotice('Gemini busy, retrying…');
             await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
-            response = await requestCompletion(prompt, apiKey);
+            response = await requestCompletion(prompt, apiKey, timeoutMs);
         }
 
         if (!response.ok) {
