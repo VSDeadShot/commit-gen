@@ -103,7 +103,9 @@ program
                 
                 if (options.dryRun) {
                     console.log(chalk.gray('Dry run complete. No changes were committed.\n'));
-                    process.exit(0);
+                    // Leave the loop instead of calling process.exit: exiting while the
+                    // HTTPS connection is still tearing down crashes libuv on Windows.
+                    break;
                 }
                 
                 const action = await promptUserAction();
