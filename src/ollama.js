@@ -1,12 +1,16 @@
 /**
- * Sends the prompt to the local Ollama instance and streams the generated commit message.
+ * Requests the streaming completion once, giving up if no response arrives in time.
  * @param {string} prompt The full prompt containing the diff and instructions
- * @param {string} model The Ollama model to use (default: 'mistral')
- * @returns {AsyncGenerator<string, void, unknown>} Yields tokens of the commit message
+ * @param {string} model The Ollama model to use
+ * @param {number} timeoutMs How long to wait for the response headers
+ * @returns {Promise<Response>} The API response, successful or not
  */
-export async function* generateCommitMessage(prompt, model = 'mistral') {
+async function requestCompletion(prompt, model, timeoutMs) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(new Error('timeout')), timeoutMs);
+
     try {
-        const response = await fetch('http://localhost:11434/api/generate', {
+        return await fetch('http://localhost:11434/api/generate', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -16,7 +20,29 @@ export async function* generateCommitMessage(prompt, model = 'mistral') {
                 prompt: prompt,
                 stream: true, // Enable streaming
             }),
+            signal: controller.signal,
         });
+    } catch (error) {
+        if (controller.signal.aborted) {
+            throw new Error(`Ollama timed out after ${Math.round(timeoutMs / 1000)}s without responding. A cold model can be slow to load.`);
+        }
+        throw error;
+    } finally {
+        // Stops the clock once the headers are in: streaming time is not counted
+        clearTimeout(timer);
+    }
+}
+
+/**
+ * Sends the prompt to the local Ollama instance and streams the generated commit message.
+ * @param {string} prompt The full prompt containing the diff and instructions
+ * @param {string} model The Ollama model to use (default: 'mistral')
+ * @param {{timeoutMs?: number}} options How long to wait for the first response
+ * @returns {AsyncGenerator<string, void, unknown>} Yields tokens of the commit message
+ */
+export async function* generateCommitMessage(prompt, model = 'mistral', { timeoutMs = 120000 } = {}) {
+    try {
+        const response = await requestCompletion(prompt, model, timeoutMs);
 
         if (!response.ok) {
             throw new Error(`Ollama API returned status ${response.status}: ${response.statusText}`);
