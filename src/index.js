@@ -132,18 +132,19 @@ program
                         }
                     } else {
                         console.log(chalk.red('\n❌ Commit aborted: Message cannot be empty.'));
-                        if (options.hook) process.exit(1);
+                        if (options.hook) process.exitCode = 1;
                     }
                     break;
                 } else if (action === 'cancel') {
                     console.log(chalk.gray('\nProcess cancelled. No changes committed.'));
-                    if (options.hook) process.exit(1);
+                    if (options.hook) process.exitCode = 1;
                     break;
                 }
             }
         } catch (error) {
             console.log('\n' + chalk.red.bold('❌ Error: ') + error.message);
-            process.exit(1);
+            // Exiting here would race the HTTPS teardown and crash libuv on Windows
+            process.exitCode = 1;
         }
     });
 
