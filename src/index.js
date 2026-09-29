@@ -85,7 +85,9 @@ program
                 }
                 
                 const generator = options.gemini 
-                    ? generateCommitMessageGemini(prompt) 
+                    ? generateCommitMessageGemini(prompt, {
+                        onNotice: (notice) => console.log(chalk.yellow(notice))
+                    })
                     : generateCommitMessage(prompt, selectedModel);
                 
                 const block = createMessageBlock();

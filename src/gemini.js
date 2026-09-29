@@ -19,28 +19,46 @@ function* parseSseLine(line) {
 }
 
 /**
+ * Requests the streaming completion once.
+ * @param {string} prompt The full prompt containing the diff and instructions
+ * @param {string} apiKey The Gemini API key
+ * @returns {Promise<Response>} The API response, successful or not
+ */
+function requestCompletion(prompt, apiKey) {
+    return fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:streamGenerateContent?alt=sse&key=${apiKey}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            contents: [{
+                parts: [{ text: prompt }]
+            }]
+        }),
+    });
+}
+
+/**
  * Sends the prompt to the Gemini API and streams the generated commit message.
  * @param {string} prompt The full prompt containing the diff and instructions
+ * @param {{retryDelayMs?: number, onNotice?: Function}} options Retry delay and a notice callback
  * @returns {AsyncGenerator<string, void, unknown>} Yields tokens of the commit message
  */
-export async function* generateCommitMessageGemini(prompt) {
+export async function* generateCommitMessageGemini(prompt, { retryDelayMs = 2000, onNotice } = {}) {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
         throw new Error('GEMINI_API_KEY environment variable is not set.');
     }
 
     try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:streamGenerateContent?alt=sse&key=${apiKey}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{ text: prompt }]
-                }]
-            }),
-        });
+        let response = await requestCompletion(prompt, apiKey);
+
+        // 503 means Gemini is momentarily overloaded, so one retry is usually enough
+        if (response.status === 503) {
+            if (onNotice) onNotice('Gemini busy, retrying…');
+            await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
+            response = await requestCompletion(prompt, apiKey);
+        }
 
         if (!response.ok) {
             const errBody = await response.text();
