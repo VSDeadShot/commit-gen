@@ -75,6 +75,11 @@ export async function* generateCommitMessageGemini(prompt, { retryDelayMs = 2000
             response = await requestCompletion(prompt, apiKey, timeoutMs);
         }
 
+        // Still overloaded after the retry: the body is long and says nothing actionable
+        if (response.status === 503) {
+            throw new Error('Gemini is overloaded right now — try again in a few minutes, or run commitgen without --gemini to use Ollama.');
+        }
+
         // 429 is the per-minute rate limit or the free-tier quota: the body is long
         // and says nothing actionable
         if (response.status === 429) {

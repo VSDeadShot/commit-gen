@@ -10,7 +10,15 @@ const MESSAGE = 'data: {"candidates":[{"content":{"parts":[{"text":"feat: add lo
  * @returns {Object} A fetch-like response
  */
 function errorResponse(status) {
-    return { ok: false, status, text: async () => `{"error":{"code":${status}}}` };
+    // Shaped like the real body, which spans many lines
+    const body = JSON.stringify({
+        error: {
+            code: status,
+            message: 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.',
+            status: 'UNAVAILABLE'
+        }
+    }, null, 2);
+    return { ok: false, status, text: async () => body };
 }
 
 /**
@@ -72,9 +80,24 @@ test('retries once after a 503 and yields the message', async () => {
 test('fails after a second 503, having tried exactly twice', async () => {
     const stats = {};
 
-    await assert.rejects(run([errorResponse(503), errorResponse(503)], {}, stats), /503/);
+    await assert.rejects(run([errorResponse(503), errorResponse(503)], {}, stats), /overloaded/i);
 
     assert.equal(stats.calls, 2);
+});
+
+test('reports a final 503 in one readable line, without the body', async () => {
+    let thrown;
+    try {
+        await run([errorResponse(503), errorResponse(503)]);
+    } catch (error) {
+        thrown = error;
+    }
+
+    assert.ok(thrown, 'expected a second 503 to throw');
+    assert.match(thrown.message, /overloaded/i);
+    assert.match(thrown.message, /ollama/i);
+    assert.doesNotMatch(thrown.message, /UNAVAILABLE|"error"/);
+    assert.equal(thrown.message.includes('\n'), false);
 });
 
 test('does not retry a status other than 503', async () => {
