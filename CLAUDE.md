@@ -46,7 +46,7 @@ Both `ollama.js` and `gemini.js` export `async function*` generators that yield 
 
 ## Known repo quirks
 
-- Both `ollama.js` and `gemini.js` time out only the first response; a stall mid-stream (after the first token) still hangs forever — known and accepted for 1.0.9.
+- Both `ollama.js` and `gemini.js` time out only the first response; a stall mid-stream (after the first token) still hangs forever — known and accepted for 1.1.0.
 
 ## Workflow Rules
 
