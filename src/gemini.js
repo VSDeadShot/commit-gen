@@ -75,6 +75,12 @@ export async function* generateCommitMessageGemini(prompt, { retryDelayMs = 2000
             response = await requestCompletion(prompt, apiKey, timeoutMs);
         }
 
+        // 429 is the per-minute rate limit or the free-tier quota: the body is long
+        // and says nothing actionable
+        if (response.status === 429) {
+            throw new Error('Gemini rate limit or free-tier quota reached — wait a minute and retry, or run commitgen without --gemini to use Ollama.');
+        }
+
         if (!response.ok) {
             const errBody = await response.text();
             throw new Error(`Gemini API returned status ${response.status}: ${errBody}`);
