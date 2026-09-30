@@ -7,14 +7,15 @@ import { generateCommitMessageGemini } from './gemini.js';
 import { createMessageBlock, promptUserAction, promptManualEdit, promptConfigMenu } from './ui.js';
 import { getConfig, setConfig } from './config.js';
 import { installHook } from './hook.js';
+import { getVersion } from './version.js';
 import fs from 'fs';
 
 const program = new Command();
 
 program
     .name('commitgen')
-    .description('CLI to generate Conventional Commits using local LLMs')
-    .version('1.0.0');
+    .description('CLI to generate Conventional Commits using Ollama or Gemini')
+    .version(getVersion());
 
 program.command('config')
     .description('Configure default settings')
